@@ -2,7 +2,7 @@ import torch
 from enum import Enum
 import logging
 
-from comfy import model_management
+from comfy import model_management  
 from .ldm.models.autoencoder import AutoencoderKL, AutoencodingEngine
 from .ldm.cascade.stage_a import StageA
 from .ldm.cascade.stage_c_coder import StageC_coder
