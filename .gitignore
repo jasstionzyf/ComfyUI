@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cod]
 /output/
+/my_workflows/
 /input/
 !/input/example.png
 /models/
