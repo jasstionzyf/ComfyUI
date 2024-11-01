@@ -115,23 +115,24 @@ class SD3(LatentFormat):
         self.scale_factor = 1.5305
         self.shift_factor = 0.0609
         self.latent_rgb_factors = [
-            [-0.0645,  0.0177,  0.1052],
-            [ 0.0028,  0.0312,  0.0650],
-            [ 0.1848,  0.0762,  0.0360],
-            [ 0.0944,  0.0360,  0.0889],
-            [ 0.0897,  0.0506, -0.0364],
-            [-0.0020,  0.1203,  0.0284],
-            [ 0.0855,  0.0118,  0.0283],
-            [-0.0539,  0.0658,  0.1047],
-            [-0.0057,  0.0116,  0.0700],
-            [-0.0412,  0.0281, -0.0039],
-            [ 0.1106,  0.1171,  0.1220],
-            [-0.0248,  0.0682, -0.0481],
-            [ 0.0815,  0.0846,  0.1207],
-            [-0.0120, -0.0055, -0.0867],
-            [-0.0749, -0.0634, -0.0456],
-            [-0.1418, -0.1457, -0.1259]
+            [-0.0922, -0.0175,  0.0749],
+            [ 0.0311,  0.0633,  0.0954],
+            [ 0.1994,  0.0927,  0.0458],
+            [ 0.0856,  0.0339,  0.0902],
+            [ 0.0587,  0.0272, -0.0496],
+            [-0.0006,  0.1104,  0.0309],
+            [ 0.0978,  0.0306,  0.0427],
+            [-0.0042,  0.1038,  0.1358],
+            [-0.0194,  0.0020,  0.0669],
+            [-0.0488,  0.0130, -0.0268],
+            [ 0.0922,  0.0988,  0.0951],
+            [-0.0278,  0.0524, -0.0542],
+            [ 0.0332,  0.0456,  0.0895],
+            [-0.0069, -0.0030, -0.0810],
+            [-0.0596, -0.0465, -0.0293],
+            [-0.1448, -0.1463, -0.1189]
         ]
+        self.latent_rgb_factors_bias = [0.2394, 0.2135, 0.1925]
         self.taesd_decoder_name = "taesd3_decoder"
 
     def process_in(self, latent):
@@ -174,3 +175,30 @@ class Flux(SD3):
 
     def process_out(self, latent):
         return (latent / self.scale_factor) + self.shift_factor
+
+class Mochi(LatentFormat):
+    latent_channels = 12
+
+    def __init__(self):
+        self.scale_factor = 1.0
+        self.latents_mean = torch.tensor([-0.06730895953510081, -0.038011381506090416, -0.07477820912866141,
+                                          -0.05565264470995561, 0.012767231469026969, -0.04703542746246419,
+                                          0.043896967884726704, -0.09346305707025976, -0.09918314763016893,
+                                          -0.008729793427399178, -0.011931556316503654, -0.0321993391887285]).view(1, self.latent_channels, 1, 1, 1)
+        self.latents_std = torch.tensor([0.9263795028493863, 0.9248894543193766, 0.9393059390890617,
+                                         0.959253732819592, 0.8244560132752793, 0.917259975397747,
+                                         0.9294154431013696, 1.3720942357788521, 0.881393668867029,
+                                         0.9168315692124348, 0.9185249279345552, 0.9274757570805041]).view(1, self.latent_channels, 1, 1, 1)
+
+        self.latent_rgb_factors = None #TODO
+        self.taesd_decoder_name = None #TODO
+
+    def process_in(self, latent):
+        latents_mean = self.latents_mean.to(latent.device, latent.dtype)
+        latents_std = self.latents_std.to(latent.device, latent.dtype)
+        return (latent - latents_mean) * self.scale_factor / latents_std
+
+    def process_out(self, latent):
+        latents_mean = self.latents_mean.to(latent.device, latent.dtype)
+        latents_std = self.latents_std.to(latent.device, latent.dtype)
+        return latent * latents_std / self.scale_factor + latents_mean
